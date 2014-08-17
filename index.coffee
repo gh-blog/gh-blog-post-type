@@ -45,7 +45,7 @@ module.exports = (options) ->
         { $ } = file
 
         $root = $.root().filter ':not(.embedded)'
-        $root.filter(fn).each (i, el) ->
+        $root.find('p > :first-child').each (i, el) ->
             $el = $ el
             for value, key in filters
                 url = value.fn $el
