@@ -42,16 +42,17 @@ filters = [
 
 module.exports = (options) ->
     processFile = (file, enc, done) ->
-        { $ } = file
+        if file.isPost
+            { $ } = file
 
-        $root = $.root().filter ':not(.embedded)'
-        $root.find('p > :first-child').each (i, el) ->
-            $el = $ el
-            for value, key in filters
-                url = value.fn $el
-                if url
-                    file[value.type].push url
-                    break if url
+            $root = $.root().filter ':not(.embedded)'
+            $root.find('p > :first-child').each (i, el) ->
+                $el = $ el
+                for value, key in filters
+                    url = value.fn $el
+                    if url
+                        file.stats[value.type].push url
+                        break if url
 
         done null, file
 
