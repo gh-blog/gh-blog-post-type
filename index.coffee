@@ -1,42 +1,48 @@
 through2 = require 'through2'
 
-# requires = ['html', 'info', 'embedly']
+# requires = ['html', 'info', 'embedly', 'images']
 
 regexp =
     video: /youtube.com\/watch\?v=[a-zA-Z0-9-]{10}/gi
 
 filters = [
     {
-        type: 'images'
+        type: 'image'
         fn: ($el) ->
             if $el.is 'img'
-                return $el.attr 'src'
+                return yes#$el.attr 'src'
             if $el.is 'picture'
                 # @TODO: srcset... etc.
-                return $el.find('img').attr 'src'
+                return yes#$el.find('img').attr 'src'
             return no
     },
     {
-        type: 'videos'
+        type: 'video'
         fn: ($el) ->
             switch
                 when $el.is 'video'
-                    return $el.attr 'src'
+                    return yes#$el.attr 'src'
                 when href = $el.attr 'href' and href.match regexp.video
-                    return href
+                    return yes#href
                 else no
     },
     {
-        type: 'audios'
+        type: 'audio'
         fn: ($el) ->
             switch
                 when $el.is 'audio'
-                    return $el.attr 'src'
+                    return yes#$el.attr 'src'
                 else no
     },
     {
-        type: 'links'
-        fn: ($el) -> $el.is 'a[href]'
+        type: 'link'
+        fn: ($el) ->
+            $el.is 'a[href]' and
+            $el.parent('p').text().trim() is $el.text().trim()
+    },
+    {
+        type: 'text'
+        fn: ($el) -> yes
     }
 ]
 
@@ -44,15 +50,31 @@ module.exports = (options) ->
     processFile = (file, enc, done) ->
         if file.isPost
             { $ } = file
+            stats = {
+                video: file.videos.length || 0
+                image: file.images.length
+                audio: file.audios.length || 0
+                link: file.links.length || 0
+                text: 0
+            }
 
-            $root = $.root().filter ':not(.embedded)'
-            $root.find('p > :first-child').each (i, el) ->
+            $root = $.root().filter ':not(.embed)'
+            #@TODO: update selector, it won't work with text?
+            $root.find('p > *:first-child:last-child').each (i, el) ->
                 $el = $ el
                 for value, key in filters
-                    url = value.fn $el
-                    if url
-                        file.stats[value.type].push url
-                        break if url
+                    if value.fn $el
+                        stats[value.type] += 1
+                        break
+
+            current_type = file.type || 'text'
+            max_value = stats.text || 0
+            
+            for type, value of stats
+                if value > max_value
+                    current_type = type
+
+            file.type = current_type
 
         done null, file
 
