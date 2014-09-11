@@ -24,5 +24,10 @@
   "homepage": "https://github.com/gh-blog/post-type",
   "dependencies": {
     "through2": "^0.6.1"
+  },
+  "gh-blog": {
+    "provides": ["content-type"],
+    "requires": ["info", "$"],
+    "recommends": ["embed", "local-images"]
   }
 }

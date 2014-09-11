@@ -69,7 +69,7 @@ module.exports = (options) ->
 
             current_type = file.type || 'text'
             max_value = stats.text || 0
-            
+
             for type, value of stats
                 if value > max_value
                     current_type = type
